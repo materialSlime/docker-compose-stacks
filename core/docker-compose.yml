@@ -1,0 +1,69 @@
+name: core
+services:
+  pihole-dns:
+    image: pihole/pihole:latest
+    container_name: pihole-dns
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - "${PATH_TO_SERVICE_VOLUMES}/pihole/etc-pihole:/etc/pihole"
+    networks:
+      direct-ip-macvlan:
+        ipv4_address: ${PIHOLE_IP}
+    restart: unless-stopped
+
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - "${PATH_TO_SERVICE_VOLUMES}/nextcloud/config:/config"
+      - "${PATH_TO_NEXTCLOUD_DATA}:/data"
+    networks:
+      direct-ip-macvlan:
+        ipv4_address: ${NXTCLD_IP}
+    restart: unless-stopped
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    security_opt:
+      - label:disable
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - "${PATH_TO_SERVICE_VOLUMES}/homeassistant:/config"
+      - "/run/dbus:/run/dbus:ro"
+    networks:
+      direct-ip-macvlan:
+        ipv4_address: ${HASS_IP}
+    dns:
+      - 192.168.1.1 # router forwards .lan to BIND; macvlan can't reach the host directly
+    restart: unless-stopped
+
+  jellyfin-media-server:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin-media
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - "${PATH_TO_SERVICE_VOLUMES}/jellyfin/config:/config"
+      - "${PATH_TO_SERVICE_VOLUMES}/jellyfin/cache:/cache"
+      - "${PATH_TO_JELLYFIN_MEDIA}:/media"
+    networks:
+      direct-ip-macvlan:
+        ipv4_address: ${JELLYFIN_IP}
+    restart: unless-stopped
+
+networks:
+  direct-ip-macvlan:
+    external: true

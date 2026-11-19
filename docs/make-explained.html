@@ -1,0 +1,391 @@
+<title>Make for Your Stacks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; a terminal "workbench" in the middle where the reader presses make commands and watches what happens. */
+:root {
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --ink: #17202a;
+  --muted: #5b6875;
+  --line: #d9dfe5;
+  --accent: #0b6e8a;
+  --accent-soft: #e0f0f4;
+  --tab: #b8650a;
+  --tab-soft: #fbefdf;
+  --term-bg: #121a22;
+  --term-ink: #d7e2ea;
+  --term-dim: #7f93a3;
+  --term-cmd: #7fd4e8;
+  --term-ok: #8fd694;
+  --term-bad: #f19a8a;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151b; --surface: #17202a; --ink: #e6edf2; --muted: #9aa9b6; --line: #2a3742;
+    --accent: #5cc3dc; --accent-soft: #12323d; --tab: #f0a64f; --tab-soft: #3a2a14;
+    --term-bg: #0a0f14; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151b; --surface: #17202a; --ink: #e6edf2; --muted: #9aa9b6; --line: #2a3742;
+  --accent: #5cc3dc; --accent-soft: #12323d; --tab: #f0a64f; --tab-soft: #3a2a14;
+  --term-bg: #0a0f14; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 80px;
+}
+main { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2.1rem, 6vw, 3.3rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 800; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p { margin: 0; max-width: 65ch; }
+.lede { font-size: 1.15rem; color: var(--muted); }
+.eyebrow { font: 600 0.75rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+code, kbd { font-family: var(--mono); font-size: 0.9em; }
+p code, li code, td code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+
+/* before / after */
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.pane { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pane h3 { font-size: 0.95rem; }
+.pane pre { margin: 0; font: 0.82rem/1.55 var(--mono); overflow-x: auto; color: var(--ink); }
+.pane.after pre { font-size: 1.3rem; color: var(--accent); font-weight: 600; }
+.pane .note { font-size: 0.9rem; color: var(--muted); }
+
+/* anatomy */
+.anatomy { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; overflow-x: auto; }
+.anatomy pre { margin: 0; font: 1rem/2 var(--mono); white-space: pre; }
+.t-target { color: var(--accent); font-weight: 600; border-bottom: 2px solid var(--accent); }
+.t-dep { color: var(--ink); border-bottom: 2px dashed var(--muted); }
+.t-tab { background: var(--tab-soft); color: var(--tab); border-radius: 3px; padding: 0 2px; font-weight: 600; }
+.t-at { color: var(--tab); font-weight: 600; }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 20px; margin-top: 4px; }
+.legend div { display: flex; flex-direction: column; gap: 2px; font-size: 0.92rem; }
+.legend b { font-family: var(--mono); font-size: 0.85rem; }
+.legend b.k-target { color: var(--accent); } .legend b.k-tab { color: var(--tab); }
+
+/* workbench */
+.bench { display: flex; flex-direction: column; gap: 12px; }
+.cmds { display: flex; flex-wrap: wrap; gap: 8px; }
+.cmds button {
+  font: 600 0.88rem var(--mono); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer;
+}
+.cmds button:hover { border-color: var(--accent); }
+.cmds button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.cmds button:focus-visible, .replay:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.explain { font-size: 0.95rem; color: var(--muted); min-height: 3em; }
+.explain strong { color: var(--ink); }
+.term { background: var(--term-bg); color: var(--term-ink); border-radius: 10px; overflow: hidden; }
+.term-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; font: 0.75rem var(--mono); color: var(--term-dim); border-bottom: 1px solid #ffffff14; }
+.replay { font: 600 0.75rem var(--mono); background: transparent; color: var(--term-cmd); border: 1px solid #ffffff2a; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+.term-body { padding: 14px; font: 0.84rem/1.65 var(--mono); min-height: 300px; overflow-x: auto; white-space: pre; }
+.term-body .prompt { color: var(--term-ok); }
+.term-body .cmd { color: var(--term-cmd); }
+.term-body .out { color: var(--term-ink); }
+.term-body .why { color: var(--term-dim); font-style: italic; }
+.term-body .bad { color: var(--term-bad); }
+.term-body .ok { color: var(--term-ok); }
+.term-body div { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) { .term-body .fresh { animation: in .25s ease-out; } }
+@keyframes in { from { opacity: 0; transform: translateY(3px); } }
+
+/* annotated makefile */
+.file { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.file-head { padding: 10px 16px; border-bottom: 1px solid var(--line); font: 600 0.8rem var(--mono); color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.row { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row pre { margin: 0; padding: 12px 16px; font: 0.8rem/1.6 var(--mono); overflow-x: auto; background: var(--bg); }
+.row .say { padding: 12px 16px; font-size: 0.92rem; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 680px) { .row { grid-template-columns: minmax(0, 1fr); } }
+
+/* gotchas */
+.gotchas { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+.gotcha { border-top: 3px solid var(--tab); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.gotcha p { font-size: 0.93rem; }
+.gotcha pre { margin: 0; font: 0.8rem/1.5 var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; }
+
+/* cheat sheet */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 0.72rem var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { white-space: nowrap; font-family: var(--mono); font-weight: 600; color: var(--accent); }
+ol.steps { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; max-width: 65ch; }
+</style>
+
+<main>
+  <header style="display:flex;flex-direction:column;gap:14px">
+    <span class="eyebrow">docker-compose-stacks · a beginner's guide</span>
+    <h1>Make is a file of named shortcuts</h1>
+    <p class="lede">You write long commands once in a file called <code>Makefile</code> and give each one a short name. After that you type <code>make up</code> and Make runs the whole list for you, in the right order. It's already installed on your server at <code>/usr/bin/make</code>.</p>
+  </header>
+
+  <section>
+    <span class="eyebrow">Why bother</span>
+    <h2>Seven folders, one command</h2>
+    <div class="compare">
+      <div class="pane">
+        <h3>Today: start everything by hand</h3>
+<pre>cd ~/docker-compose-stacks/traefik    &amp;&amp; docker compose up -d
+cd ~/docker-compose-stacks/bind       &amp;&amp; docker compose up -d
+cd ~/docker-compose-stacks/core       &amp;&amp; docker compose up -d
+cd ~/docker-compose-stacks/immich-app &amp;&amp; docker compose up -d
+cd ~/docker-compose-stacks/arr        &amp;&amp; docker compose up -d
+cd ~/docker-compose-stacks/monitoring &amp;&amp; docker compose up -d
+cd ~/docker-compose-stacks/portainer  &amp;&amp; docker compose up -d</pre>
+        <p class="note">You also have to remember to create the networks first and to start Traefik before the rest.</p>
+      </div>
+      <div class="pane after">
+        <h3>With a Makefile</h3>
+<pre>make up</pre>
+        <p class="note">Make creates any missing networks, then starts each stack in order. If one stack fails, it stops there so the error is easy to see.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Anatomy</span>
+    <h2>Each shortcut is called a rule</h2>
+    <p>A rule has a name (the <em>target</em>), an optional list of other targets to run first (<em>dependencies</em>), and the shell commands to run (the <em>recipe</em>). This is the <code>up</code> rule from your Makefile:</p>
+    <div class="anatomy">
+<pre><span class="t-target">up</span>: <span class="t-dep">network</span>
+<span class="t-tab">⇥TAB</span><span class="t-at">@</span>for d in $(s); do (cd $$d &amp;&amp; docker compose up -d) || exit 1; done</pre>
+    </div>
+    <div class="legend">
+      <div><b class="k-target">up</b>The target, which is the name you type: <code>make up</code>.</div>
+      <div><b>: network</b>Dependencies. Make runs the <code>network</code> rule before this one.</div>
+      <div><b class="k-tab">⇥ TAB</b>Every recipe line must start with a real Tab character. Spaces won't work.</div>
+      <div><b class="k-tab">@</b>Makes Make run the line without printing it first, so the output stays tidy.</div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Try it</span>
+    <h2>Press a command to see what Make does</h2>
+    <p>This is a simulation, so nothing runs on your server. The grey lines explain what Make is doing, and the blue lines are the commands it runs for you.</p>
+    <div class="bench">
+      <div class="cmds" role="group" aria-label="Make commands" id="cmds"></div>
+      <p class="explain" id="explain"></p>
+      <div class="term">
+        <div class="term-bar"><span>turing@server: ~/docker-compose-stacks</span><button class="replay" id="replay" type="button">Replay</button></div>
+        <div class="term-body" id="term" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">The real file</span>
+    <h2>Your Makefile, line by line</h2>
+    <p>Save this as <code>~/docker-compose-stacks/Makefile</code>, next to your stack folders. I ran <code>make check</code> with it against your repo, and all 7 stacks passed with no duplicate IPs.</p>
+    <div class="file">
+      <div class="file-head"><span>Makefile</span><span>recipe lines start with a Tab</span></div>
+
+      <div class="row"><pre>STACKS := traefik bind core immich-app arr monitoring portainer</pre>
+        <div class="say"><span>A <strong>variable</strong> listing your stack folders <strong>in start order</strong>. Traefik comes first because the other stacks route through it. To add a new stack, add its folder name here.</span></div></div>
+
+      <div class="row"><pre>s ?= $(STACKS)</pre>
+        <div class="say"><span><code>?=</code> sets <code>s</code> to all stacks unless you give it a value yourself. <code>make up s=arr</code> starts only arr. <code>$(STACKS)</code> is how you read a variable.</span></div></div>
+
+      <div class="row"><pre>.PHONY: help network up down pull ps logs check</pre>
+        <div class="say"><span>Tells Make these are command names, not files. Without this line, a file called <code>up</code> in the folder would make Make skip the rule.</span></div></div>
+
+      <div class="row"><pre>help:
+	@echo "make up | down | pull | ps | check | logs s=arr"</pre>
+        <div class="say"><span>The first rule in the file is the default, so plain <code>make</code> prints this reminder.</span></div></div>
+
+      <div class="row"><pre>network:
+	@docker network inspect trfk &gt;/dev/null 2&gt;&amp;1 || ./network/create-trfk.sh
+	@docker network inspect direct-ip-macvlan &gt;/dev/null 2&gt;&amp;1 || ./network/create-macvlan.sh</pre>
+        <div class="say"><span>"Does the network exist? If not (<code>||</code>), run my script." Running it again is safe because it never creates a network twice.</span></div></div>
+
+      <div class="row"><pre>up: network
+	@for d in $(s); do echo "▶ starting $$d"; (cd $$d &amp;&amp; docker compose up -d) || exit 1; done</pre>
+        <div class="say"><span>Runs the network rule first, then goes into each folder and starts it. <code>|| exit 1</code> stops at the first stack that fails.</span>
+          <span><code>$$d</code> is a <strong>shell</strong> variable. Make uses <code>$</code> for its own variables, so a shell <code>$</code> has to be written twice.</span></div></div>
+
+      <div class="row"><pre>down:
+	@for d in $$(echo $(s) | tr " " "\n" | tac); do echo "■ stopping $$d"; (cd $$d &amp;&amp; docker compose down); done</pre>
+        <div class="say"><span>Stops the stacks in <strong>reverse</strong> order (<code>tac</code> flips the list), so Traefik stops last. <code>down</code> removes containers but keeps your data and volumes.</span></div></div>
+
+      <div class="row"><pre>pull:
+	@for d in $(s); do echo "↓ pulling $$d"; (cd $$d &amp;&amp; docker compose pull) || exit 1; done</pre>
+        <div class="say"><span>Downloads newer images without restarting anything. Run <code>make up</code> afterwards to switch to them.</span></div></div>
+
+      <div class="row"><pre>ps:
+	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"</pre>
+        <div class="say"><span>A neat table of what's running.</span></div></div>
+
+      <div class="row"><pre>logs:
+	@cd $(s) &amp;&amp; docker compose logs -f --tail=50</pre>
+        <div class="say"><span>Follows one stack's logs: <code>make logs s=immich-app</code>. Press <kbd>Ctrl</kbd>+<kbd>C</kbd> to exit.</span></div></div>
+
+      <div class="row"><pre>check:
+	@for d in $(s); do (cd $$d &amp;&amp; docker compose config -q) &amp;&amp; echo "ok   $$d" || exit 1; done
+	@grep -hE "^[A-Z_]+_IP=" */.env | cut -d= -f2 | sort | uniq -d | grep . &amp;&amp; echo "DUPLICATE IP above!" &amp;&amp; exit 1 || echo "ok   no duplicate IPs"</pre>
+        <div class="say"><span>Line 1 checks every compose file for typos and missing variables without starting anything.</span>
+          <span>Line 2 collects every <code>…_IP=</code> from all your <code>.env</code> files and fails if two stacks use the same address. This is the protection your IPs were missing.</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Gotchas</span>
+    <h2>Four things that trip up everyone</h2>
+    <div class="gotchas">
+      <div class="gotcha"><h3>Tabs, not spaces</h3>
+        <p>If an editor turns the Tab into spaces, Make fails with this message:</p>
+        <pre>Makefile:9: *** missing separator.  Stop.</pre>
+        <p>In vim, <code>:set noexpandtab</code> before editing.</p></div>
+      <div class="gotcha"><h3>Every line is a new shell</h3>
+        <p>A <code>cd</code> on one recipe line is forgotten on the next line. That's why the rules above put <code>cd</code> and the command on the same line.</p></div>
+      <div class="gotcha"><h3><code>$</code> vs <code>$$</code></h3>
+        <p><code>$(s)</code> is Make's variable. <code>$$d</code> becomes <code>$d</code> for the shell. Forget the double <code>$</code> and the value comes out empty.</p></div>
+      <div class="gotcha"><h3>Preview before running</h3>
+        <p><code>make -n up</code> prints every command it <em>would</em> run without running any of them. Use it whenever you're unsure.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Cheat sheet</span>
+    <h2>What you'll type day to day</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>make</td><td>Shows the list of commands.</td></tr>
+          <tr><td>make check</td><td>Validates every stack and looks for duplicate IPs. Run it after editing any file.</td></tr>
+          <tr><td>make up</td><td>Creates any missing networks, then starts every stack in order.</td></tr>
+          <tr><td>make up s=arr</td><td>Starts or updates just the arr stack.</td></tr>
+          <tr><td>make up s="core arr"</td><td>Several stacks. Put quotes around a list.</td></tr>
+          <tr><td>make pull &amp;&amp; make up</td><td>Updates images, then restarts containers whose image changed.</td></tr>
+          <tr><td>make logs s=immich-app</td><td>Follows Immich's logs.</td></tr>
+          <tr><td>make down</td><td>Stops everything in reverse order. Your data stays.</td></tr>
+          <tr><td>make -n up</td><td>Dry run: prints the commands without running them.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Getting started</span>
+    <h2>Your first five minutes</h2>
+    <ol class="steps">
+      <li>Create <code>~/docker-compose-stacks/Makefile</code> with the contents above, or ask Claude to write it for you.</li>
+      <li><code>cd ~/docker-compose-stacks</code>. Make always reads the Makefile in the folder you're in.</li>
+      <li>Run <code>make</code> to see the help line.</li>
+      <li>Run <code>make check</code>. You should see <code>ok</code> for all 7 stacks.</li>
+      <li>Run <code>make -n up</code> to preview, then <code>make up</code> for real, once Docker is running and Apache has freed ports 80 and 443.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+(function () {
+  var ALL = ['traefik', 'bind', 'core', 'immich-app', 'arr', 'monitoring', 'portainer'];
+  function netLines() {
+    return [
+      ['why', '# "up" depends on "network", so Make runs that rule first'],
+      ['cmd', 'docker network inspect trfk >/dev/null 2>&1 || ./network/create-trfk.sh'],
+      ['why', '#   trfk already exists, so the script is skipped'],
+      ['cmd', 'docker network inspect direct-ip-macvlan >/dev/null 2>&1 || ./network/create-macvlan.sh'],
+      ['why', '#   macvlan exists too, so nothing to do']
+    ];
+  }
+  function upLines(list) {
+    var out = [['why', '# s = ' + list.join(' ')]].concat(netLines());
+    out.push(['why', '# now the "up" recipe: loop over each folder']);
+    list.forEach(function (d) {
+      out.push(['out', '▶ starting ' + d]);
+      out.push(['cmd', '  (cd ' + d + ' && docker compose up -d)']);
+      out.push(['ok', '  ✔ Container ' + (d === 'immich-app' ? 'immich_server' : d) + '  Started']);
+    });
+    out.push(['why', '# done. Every stack is up, in order']);
+    return out;
+  }
+  var COMMANDS = [
+    { name: 'make', explain: '<strong>No target given</strong>, so Make runs the first rule in the file, <code>help</code>.',
+      lines: [['why', '# no target given, so Make uses the first rule: help'], ['out', 'make up | down | pull | ps | check | logs s=arr']] },
+    { name: 'make check', explain: '<strong>Safe to run anytime.</strong> It validates every compose file and checks that no two stacks use the same IP.',
+      lines: (function () {
+        var l = [['why', '# line 1: validate each stack without starting it']];
+        ALL.forEach(function (d) { l.push(['ok', 'ok   ' + d]); });
+        l.push(['why', '# line 2: collect *_IP= from every .env and look for repeats']);
+        l.push(['ok', 'ok   no duplicate IPs']);
+        return l;
+      })() },
+    { name: 'make up', explain: '<strong>Starts everything.</strong> Make runs the <code>network</code> dependency first, then starts each stack in the order of <code>STACKS</code>.',
+      lines: upLines(ALL) },
+    { name: 'make up s=arr', explain: '<strong>s=arr replaces the default list</strong>, so only the arr folder is started. The networks are still checked first.',
+      lines: upLines(['arr']) },
+    { name: 'make down', explain: '<strong>Reverse order:</strong> Portainer stops first and Traefik stops last. Containers are removed; data folders and volumes stay.',
+      lines: (function () {
+        var l = [['why', '# tac reverses the list so Traefik stops last']];
+        ALL.slice().reverse().forEach(function (d) { l.push(['out', '■ stopping ' + d]); l.push(['cmd', '  (cd ' + d + ' && docker compose down)']); });
+        return l;
+      })() },
+    { name: 'make -n up', explain: '<strong>Dry run.</strong> <code>-n</code> prints the commands Make would run, with <code>$(s)</code> filled in, and runs none of them.',
+      lines: [['why', '# -n: print only, nothing is executed'],
+        ['out', 'docker network inspect trfk >/dev/null 2>&1 || ./network/create-trfk.sh'],
+        ['out', 'docker network inspect direct-ip-macvlan >/dev/null 2>&1 || ./network/create-macvlan.sh'],
+        ['out', 'for d in ' + ALL.join(' ') + '; do echo "▶ starting $d"; (cd $d && docker compose up -d) || exit 1; done']] },
+    { name: 'broken Makefile', explain: '<strong>What a spaces-instead-of-Tab mistake looks like.</strong> Make refuses to run anything until you fix the line it names.',
+      lines: [['why', '# line 9 was indented with spaces instead of a Tab'], ['bad', 'Makefile:9: *** missing separator.  Stop.']] }
+  ];
+
+  var cmdsEl = document.getElementById('cmds');
+  var termEl = document.getElementById('term');
+  var explainEl = document.getElementById('explain');
+  var current = 2, timer = null;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function line(cls, text, fresh) {
+    var div = document.createElement('div');
+    div.className = cls + (fresh ? ' fresh' : '');
+    div.textContent = text;
+    return div;
+  }
+  function run(i, animate) {
+    current = i;
+    clearTimeout(timer);
+    Array.prototype.forEach.call(cmdsEl.children, function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+    var c = COMMANDS[i];
+    explainEl.innerHTML = c.explain;
+    termEl.textContent = '';
+    var p = document.createElement('div');
+    var pr = document.createElement('span'); pr.className = 'prompt'; pr.textContent = '$ ';
+    p.appendChild(pr); p.appendChild(document.createTextNode(c.name === 'broken Makefile' ? 'make up' : c.name));
+    termEl.appendChild(p);
+    if (!animate || reduce) { c.lines.forEach(function (l) { termEl.appendChild(line(l[0], l[1], false)); }); return; }
+    var k = 0;
+    (function step() {
+      if (k >= c.lines.length) return;
+      var l = c.lines[k++];
+      termEl.appendChild(line(l[0], l[1], true));
+      timer = setTimeout(step, l[0] === 'why' ? 380 : 160);
+    })();
+  }
+  COMMANDS.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.id = 'cmd-' + i; b.textContent = c.name;
+    b.addEventListener('click', function () { run(i, true); });
+    cmdsEl.appendChild(b);
+  });
+  document.getElementById('replay').addEventListener('click', function () { run(current, true); });
+  run(2, false);
+})();
+</script>

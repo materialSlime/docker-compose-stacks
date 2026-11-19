@@ -1,0 +1,29 @@
+# Traefik static config. Routes come from container labels (see the other stacks).
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"        # no cert resolver yet -> Traefik's self-signed cert
+
+providers:
+  docker:
+    exposedByDefault: false  # only containers with traefik.enable=true
+    network: trfk            # reach containers over this network
+
+api:
+  dashboard: true            # served via the router in docker-compose.yml
+
+log:
+  level: INFO
+
+accessLog: {}
+
+# Later, for real HTTPS certificates (Let's Encrypt), add something like:
+# certificatesResolvers:
+#   le:
+#     acme:
+#       email: you@example.com
+#       storage: /letsencrypt/acme.json
+#       httpChallenge:
+#         entryPoint: web

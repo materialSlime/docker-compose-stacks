@@ -1,0 +1,10 @@
+services:
+  immich-server:
+    networks:
+      default: {}
+      direct-ip-macvlan:
+        ipv4_address: ${IMMICH_IP:?IMMICH_IP is not set in .env}
+
+networks:
+  direct-ip-macvlan:
+    external: true

@@ -1,0 +1,166 @@
+services:
+  homarr:
+    container_name: homarr
+    image: ghcr.io/ajnart/homarr:latest
+    restart: unless-stopped
+    volumes:
+      #      - /var/run/docker.sock:/var/run/docker.sock # Optional, only if >
+      - ${PATH_TO_SERVICE_VOLUMES}/homarr/configs:/app/data/configs
+      - ${PATH_TO_SERVICE_VOLUMES}/homarr/icons:/app/public/icons
+      - ${PATH_TO_SERVICE_VOLUMES}/homarr/data:/data
+    ports:
+      - 7575:7575
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homarr.rule=Host(`homarr.${INTERNAL_DOMAIN}`) || Host(`homarr.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.homarr.entrypoints=${ENDPOINTS}"
+      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
+
+  radarr:
+    image: ghcr.io/hotio/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ${PATH_TO_SERVICE_VOLUMES}/radarr/config:/config
+      - ${PATH_TO_MEDIA}:/data
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.${INTERNAL_DOMAIN}`) || Host(`radarr.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.radarr.entrypoints=${ENDPOINTS}"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+
+  sonarr:
+    image: ghcr.io/hotio/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ${PATH_TO_SERVICE_VOLUMES}/sonarr/config:/config
+      - ${PATH_TO_MEDIA}:/data
+
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.${INTERNAL_DOMAIN}`) || Host(`sonarr.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.sonarr.entrypoints=${ENDPOINTS}"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+
+  prowlarr:
+    image: ghcr.io/hotio/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ${PATH_TO_SERVICE_VOLUMES}/prowlarr/config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.${INTERNAL_DOMAIN}`) || Host(`prowlarr.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.prowlarr.entrypoints=${ENDPOINTS}"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - LOG_LEVEL=debug
+      - TZ=${TZ}
+    ports:
+      - 5055:5055
+    volumes:
+      - ${PATH_TO_SERVICE_VOLUMES}/jellyseerr:/app/config
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${INTERNAL_DOMAIN}`) || Host(`jellyseerr.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.jellyseerr.entrypoints=${ENDPOINTS}"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+
+  flaresolverr:
+    container_name: flaresolverr
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    restart: unless-stopped
+    ports:
+      - 8191:8191
+    networks:
+      - traefik
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - LOG_LEVEL=info
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.${INTERNAL_DOMAIN}`) || Host(`flaresolverr.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.flaresolverr.entrypoints=${ENDPOINTS}"
+      - "traefik.http.services.flaresolverr.loadbalancer.server.port=8191"
+
+  #nzb-get:
+  #container_name: nzb-get
+  #image: lscr.io/linuxserver/nzbget:latest
+  #restart: unless-stopped
+  #volumes:
+  #  - ~/nzbget:/config:z
+  #  - /mnt/vault/share/downloads:/downloads:z
+  #ports:
+  #  - 6789:6789
+  #environment:
+  #  - PUID=1000
+  #  - GUID=1000
+  #  - TZ=${TZ}
+  #networks:
+  #  - traefik
+
+  qbittorrent:
+    image: ghcr.io/hotio/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - ${PATH_TO_SERVICE_VOLUMES}/qbittorrent/config:/config
+      - ${PATH_TO_MEDIA}/downloads:/downloads
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.${INTERNAL_DOMAIN}`) || Host(`qbittorrent.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.qbittorrent.entrypoints=${ENDPOINTS}"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
+
+networks:
+  traefik:
+    external: true

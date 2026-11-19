@@ -1,0 +1,6 @@
+# secrets / per-host config
+.env
+*.env
+# editor junk
+*.swp
+*~

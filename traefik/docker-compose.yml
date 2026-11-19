@@ -1,0 +1,31 @@
+name: traefik
+services:
+  traefik:
+    image: traefik:${TRAEFIK_VERSION:-v3.3}
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - label=disable          # SELinux: lets the container read docker.sock
+      - no-new-privileges:true
+    ports:
+      - 80:80                  # entrypoint "web"
+      - 443:443                # entrypoint "websecure"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+    networks:
+      - trfk
+    labels:
+      - "traefik.enable=true"
+      # Dashboard at http://traefik.<INTERNAL_DOMAIN>, LAN clients only
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${INTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=lan-only"
+      - "traefik.http.middlewares.lan-only.ipallowlist.sourcerange=${LAN_SUBNET}"
+
+networks:
+  trfk:
+    external: true
