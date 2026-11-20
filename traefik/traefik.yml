@@ -4,15 +4,15 @@ entryPoints:
   web:
     address: ":80"
   websecure:
-    address: ":443"        # no cert resolver yet -> Traefik's self-signed cert
+    address: ":443" # no cert resolver yet -> Traefik's self-signed cert
 
 providers:
   docker:
-    exposedByDefault: false  # only containers with traefik.enable=true
-    network: trfk            # reach containers over this network
+    exposedByDefault: false # only containers with traefik.enable=true
+    network: traefik # reach containers over this network
 
 api:
-  dashboard: true            # served via the router in docker-compose.yml
+  dashboard: true # served via the router in docker-compose.yml
 
 log:
   level: INFO

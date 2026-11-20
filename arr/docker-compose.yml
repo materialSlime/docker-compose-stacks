@@ -12,6 +12,8 @@ services:
       - 7575:7575
     networks:
       - traefik
+    environment:
+      - HOSTNAME=0.0.0.0
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homarr.rule=Host(`homarr.${INTERNAL_DOMAIN}`) || Host(`homarr.${EXTERNAL_DOMAIN}`)"

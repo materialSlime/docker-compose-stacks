@@ -1,22 +1,23 @@
 name: traefik
 services:
   traefik:
-    image: traefik:${TRAEFIK_VERSION:-v3.3}
+    image: traefik:${TRAEFIK_VERSION:-v3.6}
     container_name: traefik
     restart: unless-stopped
     security_opt:
-      - label=disable          # SELinux: lets the container read docker.sock
+      - label=disable # SELinux: lets the container read docker.sock
       - no-new-privileges:true
-    ports:
-      - 80:80                  # entrypoint "web"
-      - 443:443                # entrypoint "websecure"
+    # No host ports: Traefik has its own LAN IP (TRAEFIK_IP) on the macvlan,
+    # so it listens on 80/443 there and httpd keeps the host's 80/443.
     environment:
       - TZ=${TZ}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
     networks:
-      - trfk
+      traefik: {} # talks to arr/monitoring/portainer here
+      direct-ip-macvlan:
+        ipv4_address: ${TRAEFIK_IP:?TRAEFIK_IP is not set in .env}
     labels:
       - "traefik.enable=true"
       # Dashboard at http://traefik.<INTERNAL_DOMAIN>, LAN clients only
@@ -27,5 +28,7 @@ services:
       - "traefik.http.middlewares.lan-only.ipallowlist.sourcerange=${LAN_SUBNET}"
 
 networks:
-  trfk:
+  traefik:
+    external: true
+  direct-ip-macvlan:
     external: true
