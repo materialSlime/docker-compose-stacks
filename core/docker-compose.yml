@@ -55,6 +55,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=${TZ}
+      - HEALTHCHECK_URL=http://localhost:80/health # Jellyfin is set to serve on port 80, not 8096
     volumes:
       - "${PATH_TO_SERVICE_VOLUMES}/jellyfin/config:/config"
       - "${PATH_TO_SERVICE_VOLUMES}/jellyfin/cache:/cache"
