@@ -29,6 +29,16 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     restart: unless-stopped
+    # trimmed to keep cAdvisor light: only docker containers, collect every 30s,
+    # skip disk-usage scanning (the main memory cost) and metrics we don't graph
+    command:
+      - "--docker_only=true"
+      - "--housekeeping_interval=30s"
+      - "--max_housekeeping_interval=60s"
+      - "--disable_metrics=disk,diskIO,tcp,udp,percpu,sched,process,hugetlb,referenced_memory,cpu_topology,resctrl,cpuset,advtcp,memory_numa"
+      - "--store_container_labels=false"
+      - "--whitelisted_container_labels=com.docker.compose.project,com.docker.compose.service"
+    mem_limit: 256m
     security_opt:
       - label:disable
     volumes:
