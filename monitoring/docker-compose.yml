@@ -16,6 +16,8 @@ services:
       - "--storage.tsdb.retention.size=2GB"
     expose:
       - 9091
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # reach node-exporter on the host network
     networks:
       - traefik
 
@@ -48,6 +50,22 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - traefik
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    # host network + pid so it sees the real NICs and processes, not a container's
+    network_mode: host
+    pid: host
+    security_opt:
+      - label:disable
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - "--path.rootfs=/host"
+      - "--web.listen-address=:9100"
+      - "--collector.filesystem.mount-points-exclude=^/(dev|proc|run|sys|var/lib/docker/.+|var/lib/containers/.+)($$|/)"
 
   grafana:
     image: grafana/grafana:latest
