@@ -16,6 +16,11 @@ scrape_configs:
         regex: '.+'
         action: keep
 
+  - job_name: 'disk-report'
+    scrape_interval: 60s
+    static_configs:
+      - targets: ['disk-report:9105']
+
   - job_name: 'node'
     static_configs:
       - targets: ['host.docker.internal:9100']

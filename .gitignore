@@ -4,3 +4,7 @@
 # editor junk
 *.swp
 *~
+
+# python bytecode
+__pycache__/
+*.pyc

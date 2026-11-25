@@ -67,6 +67,30 @@ services:
       - "--web.listen-address=:9100"
       - "--collector.filesystem.mount-points-exclude=^/(dev|proc|run|sys|var/lib/docker/.+|var/lib/containers/.+)($$|/)"
 
+  disk-report:
+    build: ./disk-report
+    image: local/disk-report:1
+    container_name: disk-report
+    restart: unless-stopped
+    security_opt:
+      - label:disable # read /mnt/vault without relabelling it
+    environment:
+      - TZ=Asia/Kolkata
+      - VAULT=/vault
+      - "REMOTES=gdrive:"
+      - INTERVAL=21600 # scan every 6 hours
+      - KEEP_DAYS=36500 # keep own history ~forever (100 years)
+      - RCLONE_CONFIG=/rclone/rclone.conf
+    volumes:
+      - /mnt/vault:/vault:ro
+      - /home/turing/.config/rclone:/rclone:ro
+      - disk_report_data:/data
+      - /home/turing/services/homeassistant/disk_report:/ha
+    expose:
+      - 9105
+    networks:
+      - traefik
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -86,6 +110,7 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+  disk_report_data:
 
 networks:
   traefik:
