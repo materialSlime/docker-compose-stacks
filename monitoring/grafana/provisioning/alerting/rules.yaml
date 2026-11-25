@@ -1,0 +1,509 @@
+# Grafana alert rules (no contact point yet: they show under Alerting > Alert rules).
+{
+ "apiVersion": 1,
+ "groups": [
+  {
+   "orgId": 1,
+   "name": "homelab",
+   "folder": "Alerts",
+   "interval": "1m",
+   "rules": [
+    {
+     "uid": "host-disk-full",
+     "title": "Host disk almost full",
+     "condition": "C",
+     "for": "10m",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "warning"
+     },
+     "annotations": {
+      "summary": "{{ $labels.mountpoint }} is {{ with $values.A }}{{ humanize .Value }}{{ end }}% full"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "(1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs|vfat\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|squashfs|vfat\"}) * 100",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "gt",
+           "params": [
+            85
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "storage-nearly-full",
+     "title": "Storage location over 90% used",
+     "condition": "C",
+     "for": "1h",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "warning"
+     },
+     "annotations": {
+      "summary": "{{ $labels.location }} is {{ with $values.A }}{{ humanize .Value }}{{ end }}% used"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "disk_report_used_bytes / (disk_report_used_bytes + disk_report_free_bytes) * 100",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "gt",
+           "params": [
+            90
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "storage-full-soon",
+     "title": "Storage full within 30 days",
+     "condition": "C",
+     "for": "6h",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "warning"
+     },
+     "annotations": {
+      "summary": "{{ $labels.location }} will be full in about {{ with $values.A }}{{ humanize .Value }}{{ end }} days"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "disk_report_days_until_full",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "lt",
+           "params": [
+            30
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "disk-report-errors",
+     "title": "Storage scan errors",
+     "condition": "C",
+     "for": "12h",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "warning"
+     },
+     "annotations": {
+      "summary": "disk-report scans are failing (check: docker logs disk-report)"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "disk_report_scan_errors",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "gt",
+           "params": [
+            0
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "container-oom",
+     "title": "Container killed: out of memory",
+     "condition": "C",
+     "for": "0s",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "critical"
+     },
+     "annotations": {
+      "summary": "{{ $labels.name }} ran out of memory and was killed"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "max by (name) (increase(container_oom_events_total{name!=\"\"}[10m]))",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "gt",
+           "params": [
+            0
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "container-restarting",
+     "title": "Container keeps restarting",
+     "condition": "C",
+     "for": "0s",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "critical"
+     },
+     "annotations": {
+      "summary": "{{ $labels.name }} restarted {{ with $values.A }}{{ humanize .Value }}{{ end }} times in 30 min"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "max by (name) (changes(container_start_time_seconds{name!=\"\"}[30m]))",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "gt",
+           "params": [
+            2
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "host-temp-high",
+     "title": "Host temperature high",
+     "condition": "C",
+     "for": "5m",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "critical"
+     },
+     "annotations": {
+      "summary": "{{ $labels.chip }} {{ $labels.sensor }} is at {{ with $values.A }}{{ humanize .Value }}{{ end }}\u00b0C"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "max by (chip, sensor) (node_hwmon_temp_celsius)",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "gt",
+           "params": [
+            80
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "host-memory-low",
+     "title": "Host memory low",
+     "condition": "C",
+     "for": "10m",
+     "noDataState": "OK",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "warning"
+     },
+     "annotations": {
+      "summary": "Only {{ with $values.A }}{{ humanize .Value }}{{ end }}% RAM available"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "lt",
+           "params": [
+            10
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "uid": "target-down",
+     "title": "Monitoring target down",
+     "condition": "C",
+     "for": "5m",
+     "noDataState": "Alerting",
+     "execErrState": "Error",
+     "labels": {
+      "severity": "critical"
+     },
+     "annotations": {
+      "summary": "Prometheus can't reach {{ $labels.job }} ({{ $labels.instance }})"
+     },
+     "data": [
+      {
+       "refId": "A",
+       "datasourceUid": "disk-report-prom",
+       "relativeTimeRange": {
+        "from": 600,
+        "to": 0
+       },
+       "model": {
+        "refId": "A",
+        "expr": "up",
+        "instant": true,
+        "range": false,
+        "intervalMs": 60000,
+        "maxDataPoints": 43200
+       }
+      },
+      {
+       "refId": "C",
+       "datasourceUid": "__expr__",
+       "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+       },
+       "model": {
+        "refId": "C",
+        "type": "threshold",
+        "expression": "A",
+        "conditions": [
+         {
+          "evaluator": {
+           "type": "lt",
+           "params": [
+            1
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

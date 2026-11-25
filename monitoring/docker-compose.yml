@@ -95,15 +95,22 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     restart: unless-stopped
+    environment:
+      # Infinity reads disk-report's /history JSON (storage history kept forever)
+      - GF_PLUGINS_PREINSTALL_SYNC=yesoreyeram-infinity-datasource@4.1.8
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro,z
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro,z
+      - ./grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro,z
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro,z
     expose:
       - 3000
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.${EXTERNAL_DOMAIN}`)"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${INTERNAL_DOMAIN}`) || Host(`grafana.${EXTERNAL_DOMAIN}`)"
       - "traefik.http.routers.grafana.entrypoints=${ENDPOINTS}"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 

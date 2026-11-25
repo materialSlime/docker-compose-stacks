@@ -1,0 +1,1128 @@
+{
+ "uid": "disk-report",
+ "title": "Disk report",
+ "tags": [
+  "storage"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 2,
+ "editable": false,
+ "time": {
+  "from": "now-1y",
+  "to": "now+90d"
+ },
+ "refresh": "15m",
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "Overview",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Free space",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 1,
+    "w": 6,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "disk_report_free_bytes",
+     "legendFormat": "{{location}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "noValue": "not enough history yet"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Used",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 1,
+    "w": 6,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "disk_report_used_bytes / (disk_report_used_bytes + disk_report_free_bytes)",
+     "legendFormat": "{{location}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 0.8
+       },
+       {
+        "color": "red",
+        "value": 0.9
+       }
+      ]
+     },
+     "noValue": "not enough history yet",
+     "decimals": 1
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 4,
+   "type": "stat",
+   "title": "Full in",
+   "description": "Linear fit of free space over the last 30 days. Empty while there is less than ~2 days of history or when usage isn't growing.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 1,
+    "w": 6,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "disk_report_days_until_full",
+     "legendFormat": "{{location}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "d",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 30
+       },
+       {
+        "color": "green",
+        "value": 90
+       }
+      ]
+     },
+     "noValue": "not enough history yet",
+     "decimals": 0
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 5,
+   "type": "stat",
+   "title": "Growing by (7d avg, per day)",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 18,
+    "y": 1,
+    "w": 6,
+    "h": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "disk_report_growth_7d_bytes_per_day",
+     "legendFormat": "{{location}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "noValue": "not enough history yet",
+     "decimals": 1
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 6,
+   "type": "row",
+   "title": "Projection",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 5,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 7,
+   "type": "timeseries",
+   "title": "/mnt/vault: used space & projection",
+   "datasource": {
+    "type": "datasource",
+    "uid": "-- Mixed --"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 6,
+    "w": 12,
+    "h": 10
+   },
+   "description": "Used = full history from disk-report (kept forever). Capacity and the dashed projection come from Prometheus (last 15 days). Time range extends into the future on purpose.",
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "yesoreyeram-infinity-datasource",
+      "uid": "storage-history"
+     },
+     "type": "json",
+     "source": "url",
+     "parser": "backend",
+     "format": "table",
+     "url": "http://disk-report:9105/history?loc=vault&kind=totals",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     },
+     "root_selector": "",
+     "columns": [
+      {
+       "selector": "time",
+       "text": "Time",
+       "type": "timestamp"
+      },
+      {
+       "selector": "used",
+       "text": "Used",
+       "type": "number"
+      }
+     ]
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "last_over_time(disk_report_capacity_bytes{location=\"vault\"}[120d])",
+     "legendFormat": "Capacity",
+     "refId": "B",
+     "range": true,
+     "instant": false
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "last_over_time(disk_report_used_bytes{location=\"vault\"}[120d]) + clamp_min(last_over_time(disk_report_growth_7d_bytes_per_day{location=\"vault\"}[120d]), 0) * (time() - last_over_time(disk_report_last_scan_timestamp_seconds{location=\"vault\"}[120d])) / 86400",
+     "legendFormat": "Projection",
+     "refId": "C",
+     "range": true,
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "min": 0,
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10,
+      "spanNulls": true,
+      "showPoints": "never"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Capacity"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "red"
+        }
+       },
+       {
+        "id": "custom.fillOpacity",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Projection"
+      },
+      "properties": [
+       {
+        "id": "custom.lineStyle",
+        "value": {
+         "fill": "dash",
+         "dash": [
+          10,
+          10
+         ]
+        }
+       },
+       {
+        "id": "custom.fillOpacity",
+        "value": 0
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "orange"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Used"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "blue"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 8,
+   "type": "timeseries",
+   "title": "Google Drive: used space & projection",
+   "datasource": {
+    "type": "datasource",
+    "uid": "-- Mixed --"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 6,
+    "w": 12,
+    "h": 10
+   },
+   "description": "Used = full history from disk-report (kept forever). Capacity and the dashed projection come from Prometheus (last 15 days). Time range extends into the future on purpose.",
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "yesoreyeram-infinity-datasource",
+      "uid": "storage-history"
+     },
+     "type": "json",
+     "source": "url",
+     "parser": "backend",
+     "format": "table",
+     "url": "http://disk-report:9105/history?loc=gdrive&kind=totals",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     },
+     "root_selector": "",
+     "columns": [
+      {
+       "selector": "time",
+       "text": "Time",
+       "type": "timestamp"
+      },
+      {
+       "selector": "used",
+       "text": "Used",
+       "type": "number"
+      }
+     ]
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "last_over_time(disk_report_capacity_bytes{location=\"gdrive\"}[120d])",
+     "legendFormat": "Capacity",
+     "refId": "B",
+     "range": true,
+     "instant": false
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "last_over_time(disk_report_used_bytes{location=\"gdrive\"}[120d]) + clamp_min(last_over_time(disk_report_growth_7d_bytes_per_day{location=\"gdrive\"}[120d]), 0) * (time() - last_over_time(disk_report_last_scan_timestamp_seconds{location=\"gdrive\"}[120d])) / 86400",
+     "legendFormat": "Projection",
+     "refId": "C",
+     "range": true,
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "min": 0,
+     "custom": {
+      "lineWidth": 2,
+      "fillOpacity": 10,
+      "spanNulls": true,
+      "showPoints": "never"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Capacity"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "red"
+        }
+       },
+       {
+        "id": "custom.fillOpacity",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Projection"
+      },
+      "properties": [
+       {
+        "id": "custom.lineStyle",
+        "value": {
+         "fill": "dash",
+         "dash": [
+          10,
+          10
+         ]
+        }
+       },
+       {
+        "id": "custom.fillOpacity",
+        "value": 0
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "orange"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Used"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "blue"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
+   "id": 9,
+   "type": "row",
+   "title": "Folders",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 16,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 10,
+   "type": "bargauge",
+   "title": "/mnt/vault: fastest growing folders (per day, last 7 days)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 17,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "sort_desc(disk_report_dir_growth_7d_bytes_per_day{location=\"vault\"})",
+     "legendFormat": "{{dir}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "values": false
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "min": 0,
+     "noValue": "needs ~4 days of history",
+     "color": {
+      "mode": "continuous-GrYlRd"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 11,
+   "type": "bargauge",
+   "title": "Google Drive: fastest growing folders (per day, last 7 days)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 17,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "sort_desc(disk_report_dir_growth_7d_bytes_per_day{location=\"gdrive\"})",
+     "legendFormat": "{{dir}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "values": false
+    }
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "min": 0,
+     "noValue": "needs ~4 days of history",
+     "color": {
+      "mode": "continuous-GrYlRd"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 12,
+   "type": "timeseries",
+   "title": "/mnt/vault: folder sizes",
+   "datasource": {
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "storage-history"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 25,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "yesoreyeram-infinity-datasource",
+      "uid": "storage-history"
+     },
+     "type": "json",
+     "source": "url",
+     "parser": "backend",
+     "format": "table",
+     "url": "http://disk-report:9105/history?loc=vault&kind=dirs",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     },
+     "root_selector": "",
+     "columns": [
+      {
+       "selector": "time",
+       "text": "Time",
+       "type": "timestamp"
+      },
+      {
+       "selector": "dir",
+       "text": "dir",
+       "type": "string"
+      },
+      {
+       "selector": "bytes",
+       "text": "bytes",
+       "type": "number"
+      }
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 25,
+      "stacking": {
+       "mode": "normal"
+      },
+      "spanNulls": true,
+      "showPoints": "never"
+     },
+     "displayName": "${__field.labels.dir}"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "partitionByValues",
+     "options": {
+      "fields": [
+       "dir"
+      ],
+      "keepFields": false,
+      "naming": {
+       "asLabels": true
+      }
+     }
+    }
+   ],
+   "description": "Full history from disk-report (kept forever)."
+  },
+  {
+   "id": 13,
+   "type": "timeseries",
+   "title": "Google Drive: folder sizes",
+   "datasource": {
+    "type": "yesoreyeram-infinity-datasource",
+    "uid": "storage-history"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 25,
+    "w": 12,
+    "h": 9
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "datasource": {
+      "type": "yesoreyeram-infinity-datasource",
+      "uid": "storage-history"
+     },
+     "type": "json",
+     "source": "url",
+     "parser": "backend",
+     "format": "table",
+     "url": "http://disk-report:9105/history?loc=gdrive&kind=dirs",
+     "url_options": {
+      "method": "GET",
+      "data": ""
+     },
+     "root_selector": "",
+     "columns": [
+      {
+       "selector": "time",
+       "text": "Time",
+       "type": "timestamp"
+      },
+      {
+       "selector": "dir",
+       "text": "dir",
+       "type": "string"
+      },
+      {
+       "selector": "bytes",
+       "text": "bytes",
+       "type": "number"
+      }
+     ]
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "custom": {
+      "lineWidth": 1,
+      "fillOpacity": 25,
+      "stacking": {
+       "mode": "normal"
+      },
+      "spanNulls": true,
+      "showPoints": "never"
+     },
+     "displayName": "${__field.labels.dir}"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "transformations": [
+    {
+     "id": "partitionByValues",
+     "options": {
+      "fields": [
+       "dir"
+      ],
+      "keepFields": false,
+      "naming": {
+       "asLabels": true
+      }
+     }
+    }
+   ],
+   "description": "Full history from disk-report (kept forever)."
+  },
+  {
+   "id": 14,
+   "type": "row",
+   "title": "Collector",
+   "collapsed": false,
+   "gridPos": {
+    "x": 0,
+    "y": 34,
+    "w": 24,
+    "h": 1
+   },
+   "panels": []
+  },
+  {
+   "id": 15,
+   "type": "stat",
+   "title": "Last scan",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 35,
+    "w": 8,
+    "h": 3
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "disk_report_last_scan_timestamp_seconds * 1000",
+     "legendFormat": "{{location}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "dateTimeFromNow",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "noValue": "not enough history yet"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 16,
+   "type": "stat",
+   "title": "Scan duration",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 35,
+    "w": 8,
+    "h": 3
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "disk_report_scan_duration_seconds",
+     "legendFormat": "{{location}}",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       }
+      ]
+     },
+     "noValue": "not enough history yet"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 17,
+   "type": "stat",
+   "title": "Scan errors",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "disk-report-prom"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 35,
+    "w": 8,
+    "h": 3
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "disk-report-prom"
+     },
+     "expr": "disk_report_scan_errors",
+     "legendFormat": "errors",
+     "refId": "A",
+     "range": false,
+     "instant": true
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "auto",
+    "orientation": "auto"
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     },
+     "noValue": "not enough history yet"
+    },
+    "overrides": []
+   }
+  }
+ ],
+ "description": "/mnt/vault and Google Drive usage, growth and projection (collector: disk-report container, scans every 6 h)"
+}

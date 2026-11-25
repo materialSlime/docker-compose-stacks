@@ -1,0 +1,20 @@
+apiVersion: 1
+providers:
+  - name: disk-report
+    folder: Storage
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/storage
+  - name: containers
+    folder: Containers
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/containers
+  - name: host
+    folder: Host
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/host
